@@ -3,17 +3,17 @@ import re
 from arcpy import env
 
 # 26.01.2024
-# Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РёР·-РїРѕРґ РєРѕРЅСЃРѕР»Рё ArcGIS
-# Р—Р°РіСЂСѓР¶Р°РµС‚ jpg С„Р°Р№Р»С‹ РёР· РїР°РїРєРё РІ Р·Р°СЂР°РЅРµРµ СЃРѕР·РґР°РЅРЅС‹Р№ РєР°С‚Р°Р»РѕРі СЂР°СЃС‚СЂРѕРІ (РјРѕР¶РЅРѕ РІ РїСѓСЃС‚РѕР№)
-# Р—Р°РіСЂСѓР¶Р°РµС‚ РїРѕ РѕРґРЅРѕРјСѓ. Р•СЃР»Рё СЃРµС‚СЊ РѕС‚РІР°Р»РёС‚СЃСЏ, С‚Рѕ РїСЂРѕСЃС‚Рѕ Р·Р°РіСЂСѓР·СЏС‚СЃСЏ РЅРµ РІСЃРµ.
-# РџРёС€РµС‚ Р»РѕРі Рѕ СЂРµР·СѓР»СЊС‚Р°С‚Рµ Р·Р°РіСЂСѓР·РєРё РІ LOG_AFS_load.txt
-# Р•СЃР»Рё РЅР° С‚РµС… Р¶Рµ РґР°РЅРЅС‹С… Р·Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕС†РµРґСѓСЂСѓ РµС‰С‘ СЂР°Р· РїРѕСЃР»Рµ РѕР±РІР°Р»РёРІС€РµРіРѕСЃСЏ РїСЂРѕС€Р»РѕРіРѕ,
-# С‚Рѕ РїСЂРѕРіСЂР°РјРјР° Р°РЅР°Р»РёР·РёСЂСѓРµС‚ Р»РѕРі РѕС‚ РїСЂРµРґС‹РґСѓС‰РµР№ Р·Р°РіСЂСѓР·РєРё Рё Р·Р°Р»РёРІР°РµС‚ С‚РѕР»СЊРєРѕ РЅРµР·Р°Р»РёС‚С‹Рµ jpg
+# запускается из-под консоли ArcGIS
+# Загружает jpg файлы из папки в заранее созданный каталог растров (можно в пустой)
+# Загружает по одному. Если сеть отвалится, то просто загрузятся не все.
+# Пишет лог о результате загрузки в LOG_AFS_load.txt
+# Если на тех же данных запустить процедуру ещё раз после обвалившегося прошлого,
+# то программа анализирует лог от предыдущей загрузки и заливает только незалитые jpg
 
-# USER_SETTING_1  РџСѓС‚СЊ Рє С„Р°Р№Р»Р°Рј jpg
+# USER_SETTING_1  Путь к файлам jpg
 env.workspace = r'D:\data\afs\jpg\2023'
 
-# USER_SETTING_2   РџСѓС‚СЊ Рє РєР°С‚Р°Р»РѕРіСѓ СЂР°СЃС‚СЂРѕРІ. РњРѕР¶РµС‚ Р±С‹С‚СЊ РєР°Рє Рє Р»РѕРєР°Р»СЊРЅРѕР№  gdb, С‚Р°Рє Рё Рє СЃРµС‚РµРІРѕР№ Р‘Р”
+# USER_SETTING_2   Путь к каталогу растров. Может быть как к локальной  gdb, так и к сетевой БД
 #afs_set_db = r'Database Connections\AFS2023.sde\AFS2023.DBO.AFS_2023'
 afs_set_db = r'D:\data\afs\AFS_2023.gdb\orto_2023'
 
@@ -32,7 +32,7 @@ def read_previos_log(log_file):
     
     
 os.chdir(env.workspace)
-log_file  = r'_LOG_AFS_load.txt' 
+log_file  = r'D:\data\afs\_LOG_AFS_load.txt' 
 loaded_lst = read_previos_log(log_file)
 
 r_lst  = arcpy.ListRasters('*.jpg')
@@ -42,18 +42,12 @@ for rastr in r_lst:
     log = open(log_file, 'a')
     if rastr in loaded_lst:
         continue
-    try:
-        print(rastr+' will load')
-        arcpy.RasterToGeodatabase_conversion(Input_Rasters=rastr, Output_Geodatabase=afs_set_db, Configuration_Keyword="")
-        loaded += 1
-        log.write(rastr)
-        log.write('\tsuccess\n')
-        log.close()
-    except:
-        not_loaded += 1
-        log.write(rastr)
-        log.write('\t----NONE----\n')
-        log.close()
+    print(rastr+' will load')
+    arcpy.RasterToGeodatabase_conversion(Input_Rasters=env.workspace+'\\'+rastr, Output_Geodatabase=afs_set_db, Configuration_Keyword="")
+    loaded += 1
+    log.write(rastr)
+    log.write('\tsuccess\n')
+    log.close()
 
 env.workspace = afs_set_db
 #itog_loaded  = arcpy.ListDatasets() 
