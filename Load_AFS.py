@@ -11,11 +11,12 @@ from arcpy import env
 # то программа анализирует лог от предыдущей загрузки и заливает только незалитые jpg
 
 # USER_SETTING_1  Путь к файлам jpg
-env.workspace = r'D:\data\afs\jpg\2023'
+env.workspace = r'D:\wrk_ecopassport\ortho\2005'
 
 # USER_SETTING_2   Путь к каталогу растров. Может быть как к локальной  gdb, так и к сетевой БД
 #afs_set_db = r'Database Connections\AFS2023.sde\AFS2023.DBO.AFS_2023'
-afs_set_db = r'D:\data\afs\AFS_2023.gdb\orto_2023'
+#afs_set_db = r'D:\data\afs\AFS_2023.gdb\orto_2023'
+afs_set_db = r'Database Connections\AFS2005.sde\AFS2005.DBO.AFS2005'
 
 
 def read_previos_log(log_file):
@@ -32,13 +33,13 @@ def read_previos_log(log_file):
     
     
 os.chdir(env.workspace)
-log_file  = r'D:\data\afs\_LOG_AFS_load.txt' 
+log_file  = r'!_LOG_AFS_load.txt' 
 loaded_lst = read_previos_log(log_file)
 
 r_lst  = arcpy.ListRasters('*.jpg')
 loaded = 0
 not_loaded = 0
-for rastr in r_lst:
+for rastr in r_lst[:3]:
     log = open(log_file, 'a')
     if rastr in loaded_lst:
         continue
